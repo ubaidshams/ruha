@@ -1,0 +1,185 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Spline from "@splinetool/react-spline";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setModelLoadingState,
+  setModelLoaded,
+  setModelError,
+} from "../../store/slices/uiSlice";
+
+const KawaiiModelViewer = ({
+  url,
+  productId,
+  className = "",
+  autoRotate = true,
+  showControls = true,
+  scale = 1,
+  onLoad,
+  onError,
+  fallbackImage,
+}) => {
+  const dispatch = useDispatch();
+  const { modelLoadingStates } = useSelector(state => state.ui);
+
+  const [isInView, setIsInView] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  const loadingState = modelLoadingStates[productId] || "loading";
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!url || hasStarted) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasStarted) {
+          setIsInView(true);
+          setHasStarted(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const element = document.getElementById(`viewer-${productId}`);
+    if (element) observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [url, productId, hasStarted]);
+
+  const handleLoad = spline => {
+    dispatch(setModelLoaded(productId));
+    dispatch(setModelLoadingState({ productId, status: "loaded" }));
+
+    if (autoRotate && spline) {
+      spline.setRotateSpeed(1);
+    }
+
+    if (onLoad) onLoad(spline);
+  };
+
+  const handleError = error => {
+    dispatch(setModelError(productId));
+    dispatch(setModelLoadingState({ productId, status: "error" }));
+
+    if (onError) onError(error);
+  };
+
+  const LoadingSpinner = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bubblegum/5 to-lavender-mist/20 rounded-kawaii">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-center"
+      >
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-bubblegum/20 border-t-bubblegum mx-auto mb-4"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl">🌸</span>
+          </div>
+        </div>
+        <div className="text-dark-slate/70 font-medium text-sm">
+          Loading 3D Magic...
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  const ErrorFallback = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 rounded-kawaii border border-red-200">
+      <div className="text-center p-4">
+        <div className="text-4xl mb-2">😢</div>
+        <div className="text-dark-slate/70 font-medium text-sm mb-2">
+          Oops! 3D model couldn't load
+        </div>
+        <div className="text-dark-slate/50 text-xs">
+          But don't worry, the product is still cute!
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!url) {
+    return (
+      <div className={`relative ${className}`}>
+        {fallbackImage ? (
+          <img
+            src={fallbackImage}
+            alt="Product"
+            className="w-full h-full object-cover rounded-kawaii"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-soft-blush/20 to-lavender-mist/10 rounded-kawaii flex items-center justify-center">
+            <div className="text-2xl">🎀</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      id={`viewer-${productId}`}
+      className={`relative overflow-hidden rounded-kawaii shadow-kawaii-glow ${className}`}
+      style={{ transform: `scale(${scale})` }}
+    >
+      {/* Loading State */}
+      {loadingState === "loading" && <LoadingSpinner />}
+
+      {/* Error State */}
+      {loadingState === "error" && <ErrorFallback />}
+
+      {/* 3D Model - Only render when in view and not error */}
+      {isInView && loadingState !== "error" && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full h-full"
+        >
+          <Spline
+            scene={url}
+            className="w-full h-full"
+            onLoad={handleLoad}
+            onError={handleError}
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "12px",
+            }}
+          />
+        </motion.div>
+      )}
+
+      {/* Kawaii Decoration */}
+      {loadingState === "loaded" && (
+        <div className="absolute top-2 right-2">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+            className="bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg"
+          >
+            <span className="text-lg">✨</span>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Controls Hint */}
+      {showControls && loadingState === "loaded" && (
+        <div className="absolute bottom-2 left-2">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+            className="bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full"
+          >
+            Drag to rotate • Scroll to zoom
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default KawaiiModelViewer;

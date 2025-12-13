@@ -2,18 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import {
-  Grid,
-  List,
-  Filter,
-  Heart,
-  Star,
-  ShoppingBag,
-  Eye,
-} from "lucide-react";
+import { Grid, List, Filter } from "lucide-react";
+
 import { fetchProducts } from "../store/slices/productsSlice";
-import { addToCart } from "../store/slices/cartSlice";
 import { toggleFilterOpen } from "../store/slices/filterSlice";
+import { addToCart } from "../store/slices/cartSlice";
+import KawaiiProductCard from "../components/ui/KawaiiProductCard";
 
 const ProductListingPage = () => {
   const { category } = useParams();
@@ -249,88 +243,11 @@ const ProductListingPage = () => {
             }`}
           >
             {products.map((product, index) => (
-              <motion.div
+              <KawaiiProductCard
                 key={product._id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="group"
-              >
-                <div className="card-kawaii overflow-hidden">
-                  <div className="relative">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-
-                    {/* Stock indicator */}
-                    {product.stock <= 5 && product.stock > 0 && (
-                      <div className="absolute top-3 left-3">
-                        <span className="bg-sunshine text-dark-slate px-2 py-1 rounded-full text-xs font-bold">
-                          Only {product.stock} left!
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Wishlist button */}
-                    <button className="absolute top-3 right-3 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Heart className="w-4 h-4 text-dark-slate" />
-                    </button>
-
-                    {/* Quick view */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Link
-                        to={`/product/${product._id}`}
-                        className="btn-kawaii-sm flex items-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Quick View
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-bubblegum bg-bubblegum/10 px-2 py-1 rounded-full">
-                        {product.category}
-                      </span>
-                      <div className="flex items-center text-sm text-dark-slate/70">
-                        <Star className="w-4 h-4 text-sunshine mr-1" />
-                        {product.rating.average || "4.5"}
-                        <span className="ml-1">
-                          ({product.rating.count || 0})
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="font-semibold text-dark-slate mb-2 line-clamp-2">
-                      {product.name}
-                    </h3>
-
-                    <p className="text-sm text-dark-slate/70 mb-3 line-clamp-2">
-                      {product.description}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-bubblegum">
-                        ₹{product.price.toLocaleString()}
-                      </span>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleAddToCart(product)}
-                        className="btn-kawaii-sm flex items-center gap-1"
-                        disabled={product.stock === 0}
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-                      </motion.button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                product={product}
+                index={index}
+              />
             ))}
           </div>
         )}

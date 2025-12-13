@@ -31,6 +31,7 @@ const Navbar = () => {
   const { itemCount } = useSelector(state => state.cart);
   const { activeFiltersCount } = useSelector(state => state.filters);
   const { wishlist } = useSelector(state => state.user);
+  const isAdmin = user?.role === "admin";
 
   const handleSearch = e => {
     e.preventDefault();
@@ -168,6 +169,18 @@ const Navbar = () => {
             <div className="relative">
               {isAuthenticated ? (
                 <div className="flex items-center space-x-2">
+                  {/* Admin Dashboard Link */}
+                  {isAdmin && (
+                    <Link
+                      to="/admin/dashboard"
+                      className="relative p-2 text-dark-slate hover:text-bubblegum transition-colors"
+                      title="Admin Dashboard"
+                    >
+                      <Package className="w-5 h-5" />
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-bubblegum to-electric-teal rounded-full animate-pulse"></div>
+                    </Link>
+                  )}
+
                   <Link
                     to="/profile"
                     className="hidden sm:flex items-center space-x-2 p-2 rounded-kawaii hover:bg-white/50 transition-colors"

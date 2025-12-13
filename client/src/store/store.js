@@ -5,6 +5,8 @@ import productsSlice from "./slices/productsSlice";
 import filterSlice from "./slices/filterSlice";
 import builderSlice from "./slices/builderSlice";
 import userSlice from "./slices/userSlice";
+import adminSlice from "./slices/adminSlice";
+import uiSlice from "./slices/uiSlice";
 
 const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ const store = configureStore({
     filters: filterSlice,
     builder: builderSlice,
     user: userSlice,
+    admin: adminSlice,
+    ui: uiSlice,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

@@ -15,6 +15,8 @@ import {
   Package,
   Sparkles,
   Gift,
+  Eye,
+  Maximize2,
 } from "lucide-react";
 import {
   fetchProductById,
@@ -22,6 +24,7 @@ import {
 } from "../store/slices/productsSlice";
 import { addToCart } from "../store/slices/cartSlice";
 import { toggleWishlist } from "../store/slices/userSlice";
+import KawaiiModelViewer from "../components/ui/KawaiiModelViewer";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -31,6 +34,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showBlindBoxModal, setShowBlindBoxModal] = useState(false);
+  const [viewMode, setViewMode] = useState("image"); // 'image' or '3d'
 
   const { product, relatedProducts, loading } = useSelector(
     state => state.products
@@ -140,12 +144,51 @@ const ProductDetailPage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
+            {/* View Mode Toggle */}
+            {product.modelUrl && (
+              <div className="flex justify-center gap-2 mb-4">
+                <button
+                  onClick={() => setViewMode("image")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-kawaii transition-colors ${
+                    viewMode === "image"
+                      ? "bg-bubblegum text-white"
+                      : "bg-white/80 text-dark-slate hover:bg-bubblegum/10"
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  View Image
+                </button>
+                <button
+                  onClick={() => setViewMode("3d")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-kawaii transition-colors ${
+                    viewMode === "3d"
+                      ? "bg-bubblegum text-white"
+                      : "bg-white/80 text-dark-slate hover:bg-bubblegum/10"
+                  }`}
+                >
+                  <Maximize2 className="w-4 h-4" />
+                  3D View
+                </button>
+              </div>
+            )}
+
             <div className="relative aspect-square rounded-kawaii overflow-hidden bg-white shadow-kawaii-soft">
-              <img
-                src={product.images[currentImageIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              {viewMode === "3d" && product.modelUrl ? (
+                <KawaiiModelViewer
+                  productId={`product-${product._id}`}
+                  url={product.modelUrl}
+                  className="w-full h-full"
+                  autoRotate={true}
+                  showControls={true}
+                  scale={0.9}
+                />
+              ) : (
+                <img
+                  src={product.images[currentImageIndex]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
 
               {product.images.length > 1 && (
                 <>

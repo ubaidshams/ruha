@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChevronRight, Sparkles, TrendingUp, Star } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFeaturedProducts } from "../store/slices/productsSlice";
+import KawaiiModelViewer from "../components/ui/KawaiiModelViewer";
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -97,16 +98,19 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with 3D Spline Scene */}
+      {/* Hero Section with 3D Kawaii Model */}
       <section className="relative h-screen overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-cyan-100"></div>
 
-        {/* Spline 3D Scene */}
+        {/* Kawaii 3D Model Viewer */}
         <div className="absolute inset-0 z-10">
-          <iframe
-            src="https://my.spline.design/ruha-hero-3d-copy-1732037041/"
-            className="w-full h-full border-0"
-            title="Ruha 3D Hero Scene"
+          <KawaiiModelViewer
+            productId="hero-scene"
+            url="https://my.spline.design/ruha-hero-3d-copy-1732037041/"
+            className="w-full h-full"
+            autoRotate={true}
+            showControls={false}
+            scale={1}
           />
         </div>
 

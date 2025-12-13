@@ -306,4 +306,56 @@ router.get(
   }
 );
 
+// Get all products for admin (including inactive)
+router.get("/admin/all", [auth, adminAuth], async (req, res) => {
+  try {
+    const products = await Product.find({})
+      .sort({ createdAt: -1 })
+      .select("+blindBoxContents"); // Include blind box contents for admin
+
+    res.json({ products });
+  } catch (error) {
+    console.error("Get admin products error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get product statistics for admin dashboard
+router.get("/admin/stats", [auth, adminAuth], async (req, res) => {
+  try {
+    const [
+      totalProducts,
+      lowStockProducts,
+      activeProducts,
+      inactiveProducts,
+      totalStockValue,
+    ] = await Promise.all([
+      Product.countDocuments({}),
+      Product.find({ stock: { $lte: 10 }, stock: { $gt: 0 } }).countDocuments(),
+      Product.countDocuments({ isActive: true }),
+      Product.countDocuments({ isActive: false }),
+      Product.aggregate([
+        { $match: { isActive: true } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: { $multiply: ["$price", "$stock"] } },
+          },
+        },
+      ]),
+    ]);
+
+    res.json({
+      totalProducts,
+      lowStockProducts,
+      activeProducts,
+      inactiveProducts,
+      totalStockValue: totalStockValue[0]?.total || 0,
+    });
+  } catch (error) {
+    console.error("Get product stats error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
