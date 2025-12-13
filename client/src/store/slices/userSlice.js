@@ -263,6 +263,20 @@ const userSlice = createSlice({
       const productId = action.payload;
       state.wishlist = state.wishlist.filter(item => item._id !== productId);
     },
+
+    // Toggle wishlist item (sync version)
+    toggleWishlist: (state, action) => {
+      const productId = action.payload;
+      const existingIndex = state.wishlist.findIndex(
+        item => item._id === productId
+      );
+
+      if (existingIndex !== -1) {
+        state.wishlist.splice(existingIndex, 1);
+      } else {
+        state.wishlist.push({ _id: productId });
+      }
+    },
   },
 
   extraReducers: builder => {
@@ -419,6 +433,7 @@ export const {
   removeAddressLocally,
   addToWishlistLocally,
   removeFromWishlistLocally,
+  toggleWishlist,
 } = userSlice.actions;
 
 export default userSlice.reducer;

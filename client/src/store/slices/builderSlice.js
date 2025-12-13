@@ -321,6 +321,31 @@ const builderSlice = createSlice({
       state.isBundleReady = false;
       state.error = null;
     },
+
+    // Add customized product to cart/bundle
+    addCustomizedProduct: (state, action) => {
+      const { bag, charms } = action.payload;
+
+      if (!bag || !charms || charms.length === 0) {
+        state.error = "Invalid bundle data";
+        return;
+      }
+
+      // Create a new bundle from the provided data
+      const bundle = {
+        bag,
+        charms,
+        totalPrice:
+          bag.price + charms.reduce((sum, charm) => sum + charm.price, 0),
+        createdAt: new Date().toISOString(),
+      };
+
+      state.selectedBag = bag;
+      state.selectedCharms = charms;
+      state.bundleTotal = bundle.totalPrice;
+      state.isBundleReady = true;
+      state.error = null;
+    },
   },
 });
 
@@ -352,6 +377,7 @@ export const {
   clearError,
   setLoading,
   resetBuilder,
+  addCustomizedProduct,
 } = builderSlice.actions;
 
 export default builderSlice.reducer;
