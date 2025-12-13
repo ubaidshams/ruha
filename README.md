@@ -110,8 +110,8 @@ Ruha is a MERN stack e-commerce platform featuring "Claymorphism" design, 3D int
 
 6. **Access the Application**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
-   - API Health Check: http://localhost:5000/health
+   - Backend API: http://localhost:5001
+   - API Health Check: http://localhost:5001/health
 
 ## 📁 Project Structure
 
@@ -296,8 +296,8 @@ npm run lint
 2. **Port Already in Use**
 
    ```bash
-   # Kill process on port 5000
-   lsof -ti:5000 | xargs kill -9
+   # Kill process on port 5001
+   lsof -ti:5001 | xargs kill -9
    ```
 
 3. **Dependencies Issues**

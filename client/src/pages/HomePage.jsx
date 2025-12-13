@@ -99,7 +99,7 @@ const HomePage = () => {
     <div className="min-h-screen">
       {/* Hero Section with 3D Spline Scene */}
       <section className="relative h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-soft-blush via-lavender-mist to-electric-teal/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-cyan-100"></div>
 
         {/* Spline 3D Scene */}
         <div className="absolute inset-0 z-10">

@@ -1,3 +1,6 @@
+/* ADD THIS IMPORT AT THE VERY TOP */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -51,48 +54,83 @@ body {
   box-shadow: var(--shadow-soft);
 }
 
-/* Kawaii Button Styles */
+/* Kawaii Button Styles - Updated to match components */
 .btn-kawaii {
   @apply inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-kawaii;
   background: linear-gradient(135deg, var(--color-bubblegum), #ff8ac7);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  font-family: "Quicksand", sans-serif;
+  text-decoration: none;
+  border-radius: 24px;
+}
+
+.btn-kawaii-sm {
+  @apply inline-flex items-center justify-center px-4 py-2 text-white font-semibold rounded-kawaii text-sm;
+  background: linear-gradient(135deg, var(--color-bubblegum), #ff8ac7);
+  box-shadow: 0 4px 16px rgba(255, 105, 180, 0.2);
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  font-family: "Quicksand", sans-serif;
+  text-decoration: none;
 }
 
 .btn-kawaii:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 24px rgba(255, 105, 180, 0.4);
 }
 
 .btn-kawaii:active {
   transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3);
 }
 
 .btn-kawaii-secondary {
   @apply btn-kawaii;
   background: linear-gradient(135deg, var(--color-electric-teal), #20e3e5);
+  box-shadow: 0 8px 32px rgba(0, 206, 209, 0.3);
 }
 
-.btn-kawaii-outline {
-  @apply btn-kawaii bg-transparent text-bubblegum border-2 border-bubblegum;
+.btn-kawaii-secondary:hover {
+  box-shadow: 0 0 24px rgba(0, 206, 209, 0.4);
 }
 
-.btn-kawaii-outline:hover {
+.btn-outline-kawaii {
+  @apply inline-flex items-center justify-center px-6 py-3 text-pink-500 font-semibold rounded-kawaii border-2 border-pink-500 bg-transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: "Quicksand", sans-serif;
+  text-decoration: none;
+
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.btn-outline-kawaii:hover {
   background: var(--color-bubblegum);
   color: white;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 24px rgba(255, 105, 180, 0.4);
+  border-color: var(--color-bubblegum);
 }
 
 /* Kawaii Card Styles */
 .card-kawaii {
   @apply claymorphism p-6 transition-all duration-300 hover:transform hover:-translate-y-2;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
 }
 
 .card-kawaii:hover {
-  box-shadow: var(--shadow-glow);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 24px rgba(255, 105, 180, 0.4);
 }
 
 /* Input Styles */
@@ -100,10 +138,11 @@ body {
   @apply w-full px-4 py-3 rounded-kawaii border-none outline-none text-dark-slate;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "Quicksand", sans-serif;
 }
 
 .input-kawaii:focus {
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 24px rgba(255, 105, 180, 0.4);
 }
 
 /* Loading Animations */
@@ -122,24 +161,33 @@ body {
 }
 
 /* Responsive Typography */
-h1 {
-  @apply text-4xl md:text-5xl lg:text-6xl font-heading text-dark-slate;
+h1,
+.font-heading {
+  font-family: "Fredoka One", cursive;
+  @apply text-4xl md:text-5xl lg:text-6xl text-dark-slate;
 }
 
-h2 {
-  @apply text-3xl md:text-4xl lg:text-5xl font-heading text-dark-slate;
+h2,
+.font-heading {
+  font-family: "Fredoka One", cursive;
+  @apply text-3xl md:text-4xl lg:text-5xl text-dark-slate;
 }
 
-h3 {
-  @apply text-2xl md:text-3xl font-heading text-dark-slate;
+h3,
+.font-heading {
+  font-family: "Fredoka One", cursive;
+  @apply text-2xl md:text-3xl text-dark-slate;
 }
 
 h4 {
-  @apply text-xl md:text-2xl font-body font-semibold text-dark-slate;
+  font-family: "Quicksand", sans-serif;
+  @apply text-xl md:text-2xl font-semibold text-dark-slate;
 }
 
-p {
-  @apply text-base md:text-lg font-body text-dark-slate leading-relaxed;
+p,
+.font-body {
+  font-family: "Quicksand", sans-serif;
+  @apply text-base md:text-lg text-dark-slate leading-relaxed;
 }
 
 /* Utility Classes */
@@ -168,6 +216,51 @@ p {
     rgba(255, 255, 255, 0.9) 0%,
     rgba(255, 255, 255, 0.7) 100%
   );
+}
+
+/* Special animations for Kawaii elements */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes squish {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
+.animate-squish {
+  animation: squish 0.2s ease-in-out;
 }
 
 /* Scrollbar Styling */
@@ -203,9 +296,30 @@ textarea:focus {
   outline-offset: 2px;
 }
 
+/* Ensure smooth transitions for all interactive elements */
+button,
+a,
+.card-kawaii,
+.btn-kawaii,
+.btn-outline-kawaii {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Print Styles */
 @media print {
   .no-print {
     display: none !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .btn-kawaii,
+  .btn-outline-kawaii {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .card-kawaii {
+    @apply p-4;
   }
 }

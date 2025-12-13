@@ -5,7 +5,7 @@ const api = axios.create({
   baseURL:
     process.env.NODE_ENV === "production"
       ? process.env.REACT_APP_API_URL || "https://api.ruha.com"
-      : "http://localhost:5000/api",
+      : "http://localhost:5001/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

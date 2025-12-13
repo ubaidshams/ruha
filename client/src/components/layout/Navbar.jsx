@@ -13,8 +13,12 @@ import {
   Package,
   LogOut,
 } from "lucide-react";
+
 import { logout } from "../../store/slices/authSlice";
-import { toggleFilterOpen } from "../../store/slices/filterSlice";
+import {
+  toggleFilterOpen,
+  clearAllFilters,
+} from "../../store/slices/filterSlice";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

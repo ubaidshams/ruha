@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 // Async thunks
 export const fetchProducts = createAsyncThunk(
@@ -310,5 +310,9 @@ export const {
   selectBlindBoxItem,
   clearSelectedBlindBoxItem,
 } = productsSlice.actions;
+
+// Simple action creators for backward compatibility
+export const fetchProductById = fetchProduct;
+export const fetchRelatedProducts = fetchProducts;
 
 export default productsSlice.reducer;

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 // Async thunks
 export const fetchCart = createAsyncThunk(
@@ -126,6 +126,8 @@ const initialState = {
   itemCount: 0,
   shippingCost: 0,
   freeShippingThreshold: 999,
+  isGiftMode: false,
+  giftWrapCost: 50,
   isLoading: false,
   error: null,
   message: null,
@@ -241,11 +243,15 @@ const cartSlice = createSlice({
       }, 0);
       state.shippingCost = state.total >= state.freeShippingThreshold ? 0 : 99;
     },
+
     clearGuestCart: state => {
       state.items = [];
       state.total = 0;
       state.itemCount = 0;
       state.shippingCost = 0;
+    },
+    toggleGiftMode: state => {
+      state.isGiftMode = !state.isGiftMode;
     },
   },
   extraReducers: builder => {
@@ -403,6 +409,15 @@ export const {
   updateGuestCartItem,
   removeFromGuestCart,
   clearGuestCart,
+  toggleGiftMode,
 } = cartSlice.actions;
+
+// Add bundle to cart action for bag builder
+export const addBundleToCart = bundleData => {
+  return dispatch => {
+    const { product, customization, quantity = 1 } = bundleData;
+    dispatch(addToGuestCart({ product, quantity, customization }));
+  };
+};
 
 export default cartSlice.reducer;
