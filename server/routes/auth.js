@@ -80,6 +80,7 @@ router.post(
           id: user._id,
           username: user.username,
           email: user.email,
+          role: user.role,
           profile: user.profile,
         },
       });
@@ -138,6 +139,7 @@ router.post(
           id: user._id,
           username: user.username,
           email: user.email,
+          role: user.role,
           profile: user.profile,
         },
       });
@@ -156,6 +158,7 @@ router.get("/me", auth, async (req, res) => {
         id: req.user._id,
         username: req.user.username,
         email: req.user.email,
+        role: req.user.role,
         profile: req.user.profile,
         wishlist: req.user.wishlist,
         orderHistory: req.user.orderHistory,

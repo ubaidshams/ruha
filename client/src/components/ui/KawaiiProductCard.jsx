@@ -34,11 +34,12 @@ const KawaiiProductCard = ({ product, index = 0 }) => {
           {/* Product Image/3D Model Container */}
           <div className="relative aspect-square bg-gradient-to-br from-soft-blush/20 to-lavender-mist/10 overflow-hidden">
             {/* 3D Model Viewer */}
-            {product.modelUrl && show3D ? (
+
+            {product.model3dUrl && show3D ? (
               <div className="absolute inset-0">
                 <KawaiiModelViewer
                   productId={`product-${product._id}`}
-                  url={product.modelUrl}
+                  url={product.model3dUrl}
                   className="w-full h-full"
                   autoRotate={true}
                   showControls={false}

@@ -121,6 +121,7 @@ export const deleteProduct = createAsyncThunk(
 const initialState = {
   products: [],
   featuredProducts: [],
+  relatedProducts: [],
   product: null,
   searchResults: [],
   pagination: {
@@ -280,6 +281,7 @@ const productsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+
       // Delete Product
       .addCase(deleteProduct.pending, state => {
         state.isLoading = true;
@@ -296,6 +298,10 @@ const productsSlice = createSlice({
       .addCase(deleteProduct.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+      })
+      // Fetch Related Products
+      .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
+        state.relatedProducts = action.payload.products;
       });
   },
 });
@@ -313,6 +319,20 @@ export const {
 
 // Simple action creators for backward compatibility
 export const fetchProductById = fetchProduct;
-export const fetchRelatedProducts = fetchProducts;
+
+// Create a new async thunk for related products
+export const fetchRelatedProducts = createAsyncThunk(
+  "products/fetchRelatedProducts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/products?limit=4`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch related products"
+      );
+    }
+  }
+);
 
 export default productsSlice.reducer;

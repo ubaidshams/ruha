@@ -23,8 +23,10 @@ const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const WishlistPage = React.lazy(() => import("./pages/WishlistPage"));
 const OrdersPage = React.lazy(() => import("./pages/OrdersPage"));
 const SearchPage = React.lazy(() => import("./pages/SearchPage"));
+
 const NotFoundPage = React.lazy(() => import("./pages/NotFoundPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const ProductForm = React.lazy(() => import("./pages/ProductForm"));
 
 function App() {
   return (
@@ -55,6 +57,39 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
 
                 {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/products/new"
+                  element={
+                    <AdminRoute>
+                      <ProductForm />
+                    </AdminRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/products/:id"
+                  element={
+                    <AdminRoute>
+                      <ProductForm />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/products/:id/edit"
+                  element={
+                    <AdminRoute>
+                      <ProductForm />
+                    </AdminRoute>
+                  }
+                />
                 <Route
                   path="/admin/dashboard"
                   element={

@@ -64,14 +64,22 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
-const initialState = {
+// Check if token exists and try to restore user session
+const token = localStorage.getItem("ruha-token");
+let initialState = {
   user: null,
-  token: localStorage.getItem("ruha-token"),
+  token: token,
   isLoading: false,
   isAuthenticated: false,
   error: null,
   message: null,
 };
+
+// If token exists, set axios default header and mark as authenticated
+if (token) {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  initialState.isAuthenticated = true;
+}
 
 const authSlice = createSlice({
   name: "auth",
@@ -128,12 +136,28 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
+
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+
+        // Ensure user data is properly set
+        if (action.payload.user) {
+          state.user = action.payload.user;
+          console.log("🚀 Login fulfilled - User set:", state.user);
+        } else {
+          console.error(
+            "🚀 Login fulfilled - No user data in response:",
+            action.payload
+          );
+          state.user = null;
+        }
+
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.message = action.payload.message;
+        state.error = null;
+
+        // Persist token
         localStorage.setItem("ruha-token", action.payload.token);
         axios.defaults.headers.common[
           "Authorization"
@@ -148,10 +172,33 @@ const authSlice = createSlice({
       .addCase(getCurrentUser.pending, state => {
         state.isLoading = true;
       })
+
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
+
+        // Ensure user data is properly set from the response
+        if (action.payload.user) {
+          state.user = action.payload.user;
+          console.log("🚀 GetCurrentUser fulfilled - User set:", state.user);
+          state.isAuthenticated = true;
+          state.error = null;
+        } else {
+          console.error(
+            "🚀 GetCurrentUser fulfilled - No user data in response:",
+            action.payload
+          );
+          // If no user data but we have a token, keep the existing user state
+          if (state.token && !state.user) {
+            console.log(
+              "🚀 No user data but token exists - clearing auth state"
+            );
+            state.isAuthenticated = false;
+            state.token = null;
+            state.user = null;
+            localStorage.removeItem("ruha-token");
+            delete axios.defaults.headers.common["Authorization"];
+          }
+        }
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;

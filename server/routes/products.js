@@ -1,5 +1,6 @@
 const express = require("express");
-const { body, query, validationResult } = require("express-validator");
+const { body, query, param, validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const { auth, adminAuth } = require("../middleware/auth");
 
@@ -132,42 +133,72 @@ router.get(
 );
 
 // Get single product by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const product = await Product.findOne({
-      _id: req.params.id,
-      isActive: true,
-    }).select("-blindBoxContents");
+router.get(
+  "/:id",
+  [param("id").isMongoId().withMessage("Invalid product ID format")],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Invalid product ID",
+          errors: errors.array(),
+        });
+      }
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      const product = await Product.findOne({
+        _id: req.params.id,
+        isActive: true,
+      }).select("-blindBoxContents");
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json({ product });
+    } catch (error) {
+      console.error("Get product error:", error);
+      res.status(500).json({ message: "Server error" });
     }
-
-    res.json({ product });
-  } catch (error) {
-    console.error("Get product error:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // Get blind box contents (admin only)
-router.get("/:id/contents", [auth, adminAuth], async (req, res) => {
-  try {
-    const product = await Product.findOne({
-      _id: req.params.id,
-      isBlindBox: true,
-    });
+router.get(
+  "/:id/contents",
+  [
+    auth,
+    adminAuth,
+    param("id").isMongoId().withMessage("Invalid product ID format"),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Invalid product ID",
+          errors: errors.array(),
+        });
+      }
 
-    if (!product) {
-      return res.status(404).json({ message: "Blind box product not found" });
+      const product = await Product.findOne({
+        _id: req.params.id,
+        isBlindBox: true,
+      });
+
+      if (!product) {
+        return res.status(404).json({ message: "Blind box product not found" });
+      }
+
+      res.json({ contents: product.blindBoxContents });
+    } catch (error) {
+      console.error("Get blind box contents error:", error);
+      res.status(500).json({ message: "Server error" });
     }
-
-    res.json({ contents: product.blindBoxContents });
-  } catch (error) {
-    console.error("Get blind box contents error:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // Create product (admin only)
 router.post(
@@ -215,47 +246,81 @@ router.post(
 );
 
 // Update product (admin only)
-router.put("/:id", [auth, adminAuth], async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+router.put(
+  "/:id",
+  [
+    auth,
+    adminAuth,
+    param("id").isMongoId().withMessage("Invalid product ID format"),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Invalid product ID",
+          errors: errors.array(),
+        });
+      }
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true, runValidators: true }
+      );
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json({
+        message: "Product updated successfully",
+        product,
+      });
+    } catch (error) {
+      console.error("Update product error:", error);
+      res.status(500).json({ message: "Server error" });
     }
-
-    res.json({
-      message: "Product updated successfully",
-      product,
-    });
-  } catch (error) {
-    console.error("Update product error:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // Delete product (admin only)
-router.delete("/:id", [auth, adminAuth], async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
+router.delete(
+  "/:id",
+  [
+    auth,
+    adminAuth,
+    param("id").isMongoId().withMessage("Invalid product ID format"),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Invalid product ID",
+          errors: errors.array(),
+        });
+      }
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        { isActive: false },
+        { new: true }
+      );
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json({ message: "Product deleted successfully" });
+    } catch (error) {
+      console.error("Delete product error:", error);
+      res.status(500).json({ message: "Server error" });
     }
-
-    res.json({ message: "Product deleted successfully" });
-  } catch (error) {
-    console.error("Delete product error:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // Get featured products
 router.get("/featured/list", async (req, res) => {

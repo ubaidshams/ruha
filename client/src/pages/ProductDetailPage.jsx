@@ -145,7 +145,7 @@ const ProductDetailPage = () => {
             className="space-y-4"
           >
             {/* View Mode Toggle */}
-            {product.modelUrl && (
+            {product.model3dUrl && (
               <div className="flex justify-center gap-2 mb-4">
                 <button
                   onClick={() => setViewMode("image")}
@@ -173,10 +173,10 @@ const ProductDetailPage = () => {
             )}
 
             <div className="relative aspect-square rounded-kawaii overflow-hidden bg-white shadow-kawaii-soft">
-              {viewMode === "3d" && product.modelUrl ? (
+              {viewMode === "3d" && product.model3dUrl ? (
                 <KawaiiModelViewer
                   productId={`product-${product._id}`}
-                  url={product.modelUrl}
+                  url={product.model3dUrl}
                   className="w-full h-full"
                   autoRotate={true}
                   showControls={true}
@@ -445,7 +445,7 @@ const ProductDetailPage = () => {
         </motion.div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {relatedProducts?.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

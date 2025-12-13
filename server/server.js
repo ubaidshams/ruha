@@ -2,7 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
+
 const rateLimit = require("express-rate-limit");
+const { Readable } = require("stream");
 require("dotenv").config();
 
 const app = express();
@@ -23,20 +25,76 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 mongoose
   .connect(
-    process.env.MONGODB_URI || "mongodb://localhost:27017/ruha-ecommerce",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
+    process.env.MONGODB_URI || "mongodb://localhost:27017/ruha-ecommerce"
   )
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
+
+// Proxy route for external 3D models (solves CORS issues)
+app.get("/api/proxy/3d-model.splinecode", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.status(400).json({ error: "URL parameter is required" });
+    }
+
+    // Validate that URL is from allowed domains
+    const allowedDomains = ["meshy.ai", "spline.design", "poly.pizza"];
+    const urlObj = new URL(url);
+    const isAllowed = allowedDomains.some(domain =>
+      urlObj.hostname.includes(domain)
+    );
+
+    if (!isAllowed) {
+      return res.status(403).json({ error: "Domain not allowed" });
+    }
+
+    // Fetch the 3D model file
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    // Set appropriate headers for 3D models
+    const headers = {
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=3600",
+    };
+
+    // Forward Content-Type if present, otherwise default to octet-stream
+    const contentType = response.headers.get("content-type");
+    headers["Content-Type"] = contentType || "application/octet-stream";
+
+    // specific fix for Spline: Ensure it looks like a binary stream
+    if (!contentType) {
+      headers["Content-Type"] = "application/octet-stream";
+    }
+
+    res.set(headers);
+
+    // Pipe the response
+    if (response.body) {
+      Readable.fromWeb(response.body).pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (error) {
+    console.error("3D Model proxy error:", error);
+    res.status(500).json({
+      error: "Failed to proxy 3D model",
+      details: error.message,
+    });
+  }
+});
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));

@@ -14,10 +14,12 @@ import {
   Search,
   Filter,
 } from "lucide-react";
+
 import {
   fetchAdminProducts,
   fetchProductStats,
-} from "../../store/slices/adminSlice";
+  deleteProduct,
+} from "../store/slices/adminSlice";
 
 const AdminDashboard = () => {
   const dispatch = useDispatch();
@@ -50,10 +52,19 @@ const AdminDashboard = () => {
   };
 
   const confirmDelete = async () => {
-    // TODO: Implement delete product functionality
-    console.log("Deleting product:", productToDelete._id);
-    setShowDeleteModal(false);
-    setProductToDelete(null);
+    if (!productToDelete) return;
+
+    try {
+      await dispatch(deleteProduct(productToDelete._id)).unwrap();
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+      // Refresh products and stats after successful deletion
+      dispatch(fetchAdminProducts());
+      dispatch(fetchProductStats());
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      // You could add a toast notification here for error feedback
+    }
   };
 
   if (loading) {

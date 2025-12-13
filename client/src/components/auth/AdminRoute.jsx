@@ -1,9 +1,27 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { getCurrentUser } from "../../store/slices/authSlice";
 
 const AdminRoute = ({ children }) => {
-  const { user, isLoading } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  const { user, isLoading, isAuthenticated, token } = useSelector(
+    state => state.auth
+  );
+
+  console.log("🚀 ~ AdminRoute ~ user:", user);
+  console.log("🚀 ~ AdminRoute ~ isAuthenticated:", isAuthenticated);
+  console.log("🚀 ~ AdminRoute ~ token:", token);
+
+  // If we have a token but no user, try to fetch user data
+  useEffect(() => {
+    if (token && !user && !isLoading) {
+      console.log(
+        "🚀 AdminRoute: Token exists but no user, fetching user data..."
+      );
+      dispatch(getCurrentUser());
+    }
+  }, [token, user, isLoading, dispatch]);
 
   if (isLoading) {
     return (
@@ -16,11 +34,18 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  // Strict Role Check
-  if (!user || user.role !== "admin") {
+  // Check if user exists and has admin role
+  if (!user) {
+    console.log("🚀 AdminRoute: No user data available");
     return <Navigate to="/" replace />;
   }
 
+  if (user.role !== "admin") {
+    console.log("🚀 AdminRoute: User is not admin, role:", user.role);
+    return <Navigate to="/" replace />;
+  }
+
+  console.log("🚀 AdminRoute: Access granted for admin user");
   return children;
 };
 

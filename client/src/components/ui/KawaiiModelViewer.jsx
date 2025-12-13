@@ -27,7 +27,33 @@ const KawaiiModelViewer = ({
 
   const loadingState = modelLoadingStates[productId] || "loading";
 
+  // Function to handle external URLs with proxy
+  const getProxyUrl = originalUrl => {
+    if (!originalUrl) return originalUrl;
+
+    // Check if URL is from external domains that need proxying
+    const externalDomains = ["meshy.ai", "spline.design", "poly.pizza"];
+    const urlObj = new URL(originalUrl);
+    const isExternal = externalDomains.some(domain =>
+      urlObj.hostname.includes(domain)
+    );
+
+    if (isExternal) {
+      // Use server proxy to avoid CORS issues
+      const proxyUrl = new URL(
+        "/api/proxy/3d-model.splinecode",
+        window.location.origin
+      );
+      proxyUrl.searchParams.set("url", originalUrl);
+      return proxyUrl.toString();
+    }
+
+    // Return original URL for local/internal resources
+    return originalUrl;
+  };
+
   // Intersection Observer for lazy loading
+
   useEffect(() => {
     if (!url || hasStarted) return;
 
@@ -48,19 +74,35 @@ const KawaiiModelViewer = ({
   }, [url, productId, hasStarted]);
 
   const handleLoad = spline => {
+    if (!spline) return;
+
     dispatch(setModelLoaded(productId));
     dispatch(setModelLoadingState({ productId, status: "loaded" }));
 
-    if (autoRotate && spline) {
-      spline.setRotateSpeed(1);
-    }
+    // Model loaded successfully - no API calls needed
+    // Let Spline handle rotation with default settings
 
     if (onLoad) onLoad(spline);
   };
 
   const handleError = error => {
-    dispatch(setModelError(productId));
-    dispatch(setModelLoadingState({ productId, status: "error" }));
+    console.warn("3D Model Loading Error:", error);
+
+    // Check if it's a CORS error (most common with external 3D models)
+    const isCORSError =
+      error?.message?.includes("CORS") ||
+      error?.message?.includes("Failed to fetch") ||
+      error?.message?.includes("No Access-Control-Allow-Origin");
+
+    if (isCORSError) {
+      console.warn(`CORS error loading 3D model from external source: ${url}`);
+      // Still mark as error but with more graceful handling
+      dispatch(setModelError(productId));
+      dispatch(setModelLoadingState({ productId, status: "error" }));
+    } else {
+      dispatch(setModelError(productId));
+      dispatch(setModelLoadingState({ productId, status: "error" }));
+    }
 
     if (onError) onError(error);
   };
@@ -138,7 +180,7 @@ const KawaiiModelViewer = ({
           className="w-full h-full"
         >
           <Spline
-            scene={url}
+            scene={getProxyUrl(url)}
             className="w-full h-full"
             onLoad={handleLoad}
             onError={handleError}
