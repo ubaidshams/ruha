@@ -69,16 +69,17 @@ const token = localStorage.getItem("ruha-token");
 let initialState = {
   user: null,
   token: token,
-  isLoading: false,
+  // If we have a token, we are "loading" until we verify it
+  isLoading: !!token,
   isAuthenticated: false,
   error: null,
   message: null,
 };
 
-// If token exists, set axios default header and mark as authenticated
+// If token exists, set axios default header
 if (token) {
   axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  initialState.isAuthenticated = true;
+  // Don't mark as authenticated yet - wait for getCurrentUser to verify
 }
 
 const authSlice = createSlice({

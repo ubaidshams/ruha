@@ -47,8 +47,16 @@ app.get("/api/proxy/3d-model.splinecode", async (req, res) => {
       return res.status(400).json({ error: "URL parameter is required" });
     }
 
-    // Validate that URL is from allowed domains
-    const allowedDomains = ["meshy.ai", "spline.design", "poly.pizza"];
+    // Validate that URL is from allowed domains (expanded list)
+    const allowedDomains = [
+      "meshy.ai",
+      "spline.design",
+      "poly.pizza",
+      "github.com",
+      "raw.githubusercontent.com",
+      "sketchfab.com",
+      "threejs.org",
+    ];
     const urlObj = new URL(url);
     const isAllowed = allowedDomains.some(domain =>
       urlObj.hostname.includes(domain)
@@ -97,7 +105,7 @@ app.get("/api/proxy/3d-model.splinecode", async (req, res) => {
   }
 });
 
-// For GLTF/GLB models
+// For GLTF/GLB models - Enhanced with better error handling
 app.get("/api/proxy/3d-model.gltf", async (req, res) => {
   try {
     const { url } = req.query;
@@ -122,12 +130,13 @@ app.get("/api/proxy/3d-model.gltf", async (req, res) => {
       return res.status(403).json({ error: "Domain not allowed" });
     }
 
-    // Fetch the 3D model file
+    // Enhanced fetch with authentication handling
     const response = await fetch(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         Accept: "application/octet-stream, model/gltf+json, */*",
+        "Accept-Language": "en-US,en;q=0.9",
       },
     });
 
@@ -137,15 +146,42 @@ app.get("/api/proxy/3d-model.gltf", async (req, res) => {
       );
     }
 
-    // Check if response is HTML (error pages)
+    // Check if response is HTML (authentication required)
     const contentType = response.headers.get("content-type") || "";
+    const contentLength = response.headers.get("content-length");
+
     if (contentType.includes("text/html")) {
       const text = await response.text();
-      console.error(
-        "Received HTML instead of 3D model:",
+      console.warn(
+        "Received HTML instead of 3D model - likely authentication required:",
         text.substring(0, 200)
       );
-      throw new Error("Received HTML instead of 3D model data");
+
+      // Return a helpful error response instead of throwing
+      return res.status(401).json({
+        error: "Authentication Required",
+        message:
+          "This 3D model requires authentication or login to access. Please use a direct .gltf/.glb file URL or ensure the model is publicly accessible.",
+        originalUrl: url,
+        suggestion:
+          "Try downloading the model and hosting it directly, or use a different model URL.",
+      });
+    }
+
+    // For small responses that might still be HTML error pages
+    if (contentLength && parseInt(contentLength) < 1000) {
+      const text = await response.text();
+      if (text.includes("<html") || text.includes("<!DOCTYPE")) {
+        return res.status(401).json({
+          error: "Authentication Required",
+          message:
+            "This 3D model requires authentication. Please use a direct file URL.",
+          originalUrl: url,
+        });
+      }
+      // If it's not HTML, re-parse as buffer
+      const buffer = Buffer.from(text, "utf-8");
+      return sendBufferResponse(buffer, urlObj, res);
     }
 
     // Set appropriate headers for GLTF models
@@ -185,6 +221,27 @@ app.get("/api/proxy/3d-model.gltf", async (req, res) => {
     });
   }
 });
+
+// Helper function to send buffer responses
+function sendBufferResponse(buffer, urlObj, res) {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "public, max-age=3600",
+  };
+
+  // Detect content type from URL extension
+  const pathname = urlObj.pathname.toLowerCase();
+  if (pathname.endsWith(".gltf")) {
+    headers["Content-Type"] = "model/gltf+json";
+  } else if (pathname.endsWith(".glb")) {
+    headers["Content-Type"] = "model/gltf-binary";
+  } else {
+    headers["Content-Type"] = "application/octet-stream";
+  }
+
+  res.set(headers);
+  res.end(buffer);
+}
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));

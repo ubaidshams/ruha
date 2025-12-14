@@ -1,6 +1,8 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence } from "framer-motion";
+import { getCurrentUser } from "./store/slices/authSlice";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
@@ -30,11 +32,21 @@ const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const ProductForm = React.lazy(() => import("./pages/ProductForm"));
 
 function App() {
+  const dispatch = useDispatch();
+  const { token } = useSelector(state => state.auth);
+
+  // Restore session on load
+  useEffect(() => {
+    if (token) {
+      dispatch(getCurrentUser());
+    }
+  }, [dispatch, token]);
+
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-br from-blush via-lavender/30 to-white">
         {/* Kawaii Cursor */}
-        <KawaiiCursor />
+        {/* <KawaiiCursor /> */}
 
         <Navbar />
 

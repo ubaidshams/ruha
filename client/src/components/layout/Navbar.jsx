@@ -19,6 +19,7 @@ import {
   toggleFilterOpen,
   clearAllFilters,
 } from "../../store/slices/filterSlice";
+import RuhaLogo from "../ui/RuhaLogo";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -65,13 +66,13 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-bubblegum to-electric-teal rounded-kawaii flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-heading text-2xl text-gradient hidden sm:block">
-              Ruha
-            </span>
+          <Link to="/" className="flex items-center">
+            <RuhaLogo
+              size="sm"
+              animated={true}
+              interactive={true}
+              className="h-10 w-auto hover:scale-105 transition-transform duration-200"
+            />
           </Link>
 
           {/* Desktop Navigation */}
