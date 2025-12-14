@@ -23,6 +23,7 @@ const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const WishlistPage = React.lazy(() => import("./pages/WishlistPage"));
 const OrdersPage = React.lazy(() => import("./pages/OrdersPage"));
 const SearchPage = React.lazy(() => import("./pages/SearchPage"));
+const ModelTestPage = React.lazy(() => import("./pages/ModelTestPage"));
 
 const NotFoundPage = React.lazy(() => import("./pages/NotFoundPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
@@ -51,6 +52,7 @@ function App() {
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/bag-builder" element={<BagBuilderPage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/model-test" element={<ModelTestPage />} />
 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />

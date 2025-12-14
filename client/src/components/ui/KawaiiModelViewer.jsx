@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Spline from "@splinetool/react-spline";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   setModelLoadingState,
   setModelLoaded,
   setModelError,
 } from "../../store/slices/uiSlice";
+import KawaiiGLTFViewer from "./KawaiiGLTFViewer"; // Import the new component
 
 const KawaiiModelViewer = ({
   url,
@@ -26,6 +28,10 @@ const KawaiiModelViewer = ({
   const [hasStarted, setHasStarted] = useState(false);
 
   const loadingState = modelLoadingStates[productId] || "loading";
+
+  // Check if URL is for Spline
+  const isSplineUrl =
+    url?.includes("spline.design") || url?.endsWith(".splinecode");
 
   // Function to handle external URLs with proxy
   const getProxyUrl = originalUrl => {
@@ -157,6 +163,11 @@ const KawaiiModelViewer = ({
         )}
       </div>
     );
+  }
+
+  // If it's not a Spline URL, render the GLTF viewer
+  if (!isSplineUrl) {
+    return <KawaiiGLTFViewer url={url} className={className} />;
   }
 
   return (

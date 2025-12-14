@@ -26,7 +26,8 @@
     "react-konva": "^18.2.10",
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.8.1",
-    "react-spring": "^9.7.3"
+    "react-spring": "^9.7.3",
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
