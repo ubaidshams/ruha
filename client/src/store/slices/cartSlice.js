@@ -120,6 +120,40 @@ export const getCartTotal = createAsyncThunk(
   }
 );
 
+export const mergeCart = createAsyncThunk(
+  "cart/mergeCart",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+      const guestCart = getState().cart.items;
+
+      if (guestCart.length === 0) {
+        return { message: "No guest cart items to merge", merged: false };
+      }
+
+      // Transform guest cart items to match server format
+      const guestCartData = guestCart.map(item => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+        customization: item.customization || {},
+      }));
+
+      const response = await axios.post(
+        `${API_URL}/cart/merge`,
+        { guestCart: guestCartData },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to merge cart"
+      );
+    }
+  }
+);
+
 const initialState = {
   items: [],
   total: 0,
@@ -392,12 +426,36 @@ const cartSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+
       // Get Cart Total
       .addCase(getCartTotal.fulfilled, (state, action) => {
         state.total = action.payload.total;
         state.itemCount = action.payload.itemCount;
         state.shippingCost = action.payload.shippingCost;
         state.freeShippingThreshold = action.payload.freeShippingThreshold;
+      })
+      // Merge Cart
+      .addCase(mergeCart.pending, state => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(mergeCart.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload.merged) {
+          // Update cart with merged items
+          state.items = action.payload.cart || [];
+          // Clear guest cart after successful merge
+          state.total = 0;
+          state.itemCount = 0;
+          state.shippingCost = 0;
+          state.message = action.payload.message;
+        } else {
+          state.message = action.payload.message;
+        }
+      })
+      .addCase(mergeCart.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

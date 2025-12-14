@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -12,12 +12,18 @@ import {
   Tag,
   Package,
   Gift,
+  Image,
 } from "lucide-react";
 import {
   createProduct,
   updateProduct,
   fetchProductById,
 } from "../store/slices/productsSlice";
+import {
+  uploadImage,
+  uploadMultipleImages,
+  deleteImage,
+} from "../store/slices/adminSlice";
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -46,8 +52,12 @@ const ProductForm = () => {
   });
 
   const [newTag, setNewTag] = useState("");
-  const [newImage, setNewImage] = useState("");
   const [errors, setErrors] = useState({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef(null);
+
+  const { isLoading: isAdminLoading } = useSelector(state => state.admin);
 
   const categories = ["Sip", "Carry", "Play", "Tech", "Glam", "Decor"];
   const predefinedTags = [
@@ -158,21 +168,59 @@ const ProductForm = () => {
     }
   };
 
-  const addImage = () => {
-    if (newImage.trim() && !formData.images.includes(newImage.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImage.trim()],
-      }));
-      setNewImage("");
+  const handleImageUpload = async event => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      if (files.length === 1) {
+        // Single file upload
+        const result = await dispatch(uploadImage(files[0])).unwrap();
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, result.imageUrl],
+        }));
+      } else {
+        // Multiple files upload
+        const result = await dispatch(uploadMultipleImages(files)).unwrap();
+        const imageUrls = result.images.map(img => img.imageUrl);
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...imageUrls],
+        }));
+      }
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setErrors({ images: "Failed to upload images. Please try again." });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
-  const removeImage = index => {
+  const removeImage = async index => {
+    const imageToRemove = formData.images[index];
+
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }));
+
+    // Optionally delete from Cloudinary if you have the publicId
+    // You would need to store the publicId along with the URL
+    // For now, we'll just remove it from the local state
+  };
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
   };
 
   const addTag = tag => {
@@ -371,51 +419,89 @@ const ProductForm = () => {
             className="bg-white/50 rounded-kawaii p-6 shadow-kawaii-soft"
           >
             <h2 className="text-2xl font-heading text-dark-slate mb-6 flex items-center gap-2">
-              <Upload className="w-6 h-6" />
+              <Image className="w-6 h-6" />
               Product Images *
             </h2>
 
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={newImage}
-                  onChange={e => setNewImage(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-white/80 border border-white/50 rounded-kawaii focus:outline-none focus:ring-2 focus:ring-bubblegum"
-                  placeholder="Enter image URL"
-                />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="px-6 py-3 bg-bubblegum text-white rounded-kawaii hover:bg-bubblegum/90 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
 
-              {errors.images && (
-                <p className="text-red-500 text-sm">{errors.images}</p>
-              )}
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-kawaii"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+            {/* Upload Area */}
+            <div
+              onClick={handleFileSelect}
+              className={`border-2 border-dashed rounded-kawaii p-8 text-center cursor-pointer transition-colors ${
+                isUploading
+                  ? "border-bubblegum/50 bg-bubblegum/5"
+                  : "border-white/50 hover:border-bubblegum/50 hover:bg-bubblegum/5"
+              }`}
+            >
+              {isUploading ? (
+                <div className="space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bubblegum mx-auto"></div>
+                  <p className="text-dark-slate/70">
+                    Uploading images... {uploadProgress}%
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Upload className="w-12 h-12 text-bubblegum/70 mx-auto" />
+                  <div>
+                    <p className="text-lg font-medium text-dark-slate">
+                      Click to upload images
+                    </p>
+                    <p className="text-sm text-dark-slate/70">
+                      or drag and drop your images here
+                    </p>
+                    <p className="text-xs text-dark-slate/50 mt-2">
+                      PNG, JPG, GIF up to 5MB each
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
+
+            {errors.images && (
+              <p className="text-red-500 text-sm mt-2">{errors.images}</p>
+            )}
+
+            {/* Uploaded Images Grid */}
+            {formData.images.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-dark-slate mb-3">
+                  Uploaded Images ({formData.images.length})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-kawaii"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      {index === 0 && (
+                        <div className="absolute bottom-2 left-2 bg-bubblegum text-white text-xs px-2 py-1 rounded">
+                          Primary
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Specifications */}
@@ -611,13 +697,14 @@ const ProductForm = () => {
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isAdminLoading || isUploading}
               className="px-8 py-3 bg-gradient-to-r from-bubblegum to-electric-teal text-white rounded-kawaii hover:from-bubblegum/90 hover:to-electric-teal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              {isLoading
+              {isLoading || isAdminLoading || isUploading
                 ? "Saving..."
                 : isEdit
                 ? "Update Product"

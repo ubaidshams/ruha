@@ -1,9 +1,11 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const { auth } = require("../middleware/auth");
+
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Product = require("../models/Product");
+const emailService = require("../services/emailService");
 
 const router = express.Router();
 
@@ -110,6 +112,16 @@ router.post(
       });
 
       await order.populate("items.product");
+
+      // Send order confirmation email
+      try {
+        const user = await User.findById(req.user._id);
+        await emailService.sendOrderConfirmation(order, user);
+        console.log(`Order confirmation email sent for order ${order._id}`);
+      } catch (emailError) {
+        console.error("Failed to send order confirmation email:", emailError);
+        // Don't fail the order creation if email fails
+      }
 
       res.status(201).json({
         message: "Order created successfully",
@@ -313,6 +325,21 @@ router.put(
         return res.status(404).json({ message: "Order not found" });
       }
 
+      // Send email notification for status changes
+      try {
+        const user = await User.findById(order.user);
+        if (status === "shipped") {
+          await emailService.sendOrderShipped(order, user);
+          console.log(`Order shipped email sent for order ${order._id}`);
+        } else if (status === "delivered") {
+          await emailService.sendOrderDelivered(order, user);
+          console.log(`Order delivered email sent for order ${order._id}`);
+        }
+      } catch (emailError) {
+        console.error("Failed to send status update email:", emailError);
+        // Don't fail the status update if email fails
+      }
+
       res.json({
         message: "Order status updated successfully",
         order,
@@ -323,5 +350,130 @@ router.put(
     }
   }
 );
+
+// Admin: Get sales analytics
+router.get("/admin/sales", auth, async (req, res) => {
+  try {
+    const { range = "7d" } = req.query;
+
+    // Calculate date range
+    const now = new Date();
+    let startDate;
+
+    switch (range) {
+      case "7d":
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "30d":
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case "90d":
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case "1y":
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    }
+
+    // Aggregate sales data by date
+    const salesData = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          status: { $nin: ["cancelled"] }, // Exclude cancelled orders
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          totalSales: { $sum: "$total" },
+          orderCount: { $sum: 1 },
+          averageOrderValue: { $avg: "$total" },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by date ascending
+      },
+    ]);
+
+    // Get top selling products
+    const topProducts = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          status: { $nin: ["cancelled"] },
+        },
+      },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.product",
+          totalQuantity: { $sum: "$items.quantity" },
+          totalRevenue: {
+            $sum: { $multiply: ["$items.quantity", "$items.price"] },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $project: {
+          productName: "$product.name",
+          totalQuantity: 1,
+          totalRevenue: 1,
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 },
+    ]);
+
+    // Get order status distribution
+    const statusDistribution = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.json({
+      salesData,
+      topProducts,
+      statusDistribution,
+      summary: {
+        totalRevenue: salesData.reduce((sum, day) => sum + day.totalSales, 0),
+        totalOrders: salesData.reduce((sum, day) => sum + day.orderCount, 0),
+        averageOrderValue:
+          salesData.length > 0
+            ? salesData.reduce((sum, day) => sum + day.averageOrderValue, 0) /
+              salesData.length
+            : 0,
+      },
+    });
+  } catch (error) {
+    console.error("Get sales analytics error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;

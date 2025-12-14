@@ -221,6 +221,79 @@ router.delete("/clear", auth, async (req, res) => {
   }
 });
 
+// Merge guest cart with user cart
+router.post("/merge", auth, async (req, res) => {
+  try {
+    const { guestCart } = req.body;
+
+    if (!Array.isArray(guestCart)) {
+      return res.status(400).json({ message: "Invalid guest cart format" });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let merged = false;
+
+    // Process each guest cart item
+    for (const guestItem of guestCart) {
+      const { productId, quantity, customization } = guestItem;
+
+      // Validate product exists
+      const product = await Product.findById(productId);
+      if (!product || !product.isActive) {
+        continue; // Skip invalid products
+      }
+
+      // Find existing cart item
+      const existingItemIndex = user.cart.findIndex(
+        item =>
+          item.product.toString() === productId &&
+          JSON.stringify(item.customization) ===
+            JSON.stringify(customization || {})
+      );
+
+      if (existingItemIndex !== -1) {
+        // Merge quantities if item exists
+        const newQuantity = user.cart[existingItemIndex].quantity + quantity;
+
+        // Check stock availability
+        if (newQuantity <= product.stock) {
+          user.cart[existingItemIndex].quantity = newQuantity;
+          merged = true;
+        }
+      } else {
+        // Add new item if stock available
+        if (quantity <= product.stock) {
+          user.cart.push({
+            product: productId,
+            quantity,
+            customization: customization || {},
+          });
+          merged = true;
+        }
+      }
+    }
+
+    if (merged) {
+      await user.save();
+      await user.populate("cart.product");
+    }
+
+    res.json({
+      message: merged ? "Cart merged successfully" : "No items to merge",
+      cart: user.cart,
+      merged,
+    });
+  } catch (error) {
+    console.error("Merge cart error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Get cart total
 router.get("/total", auth, async (req, res) => {
   try {

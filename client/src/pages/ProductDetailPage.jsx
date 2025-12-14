@@ -23,8 +23,13 @@ import {
   fetchRelatedProducts,
 } from "../store/slices/productsSlice";
 import { addToCart } from "../store/slices/cartSlice";
-import { toggleWishlist } from "../store/slices/userSlice";
+
+import { toggleWishlistOptimistic } from "../store/slices/userSlice";
+
 import KawaiiModelViewer from "../components/ui/KawaiiModelViewer";
+import ReviewForm from "../components/ui/ReviewForm";
+import ReviewList from "../components/ui/ReviewList";
+import SEO from "../components/ui/SEO";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -112,6 +117,16 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-soft-blush via-lavender-mist/30 to-white">
+      <SEO
+        title={product.name}
+        description={product.description}
+        keywords={`${product.category}, ${
+          product.tags?.join(", ") || ""
+        }, kawaii, cute, ${product.name}`}
+        image={product.images?.[0]}
+        url={`https://ruha-store.com/product/${product._id}`}
+        type="product"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <motion.nav
@@ -352,7 +367,8 @@ const ProductDetailPage = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() =>
-                  isAuthenticated && dispatch(toggleWishlist(product._id))
+                  isAuthenticated &&
+                  dispatch(toggleWishlistOptimistic(product._id))
                 }
                 className={`p-4 rounded-kawaii transition-colors ${
                   isWishlisted
@@ -441,6 +457,26 @@ const ProductDetailPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Reviews Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-16"
+        >
+          <div className="space-y-8">
+            <ReviewForm
+              productId={product._id}
+              onReviewAdded={result => {
+                console.log("Review added successfully:", result);
+              }}
+            />
+            <ReviewList
+              reviews={product.reviews || []}
+              rating={product.rating || { average: 0, count: 0 }}
+            />
           </div>
         </motion.div>
 

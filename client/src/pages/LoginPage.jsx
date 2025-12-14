@@ -3,7 +3,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+
 import { login } from "../store/slices/authSlice";
+import { mergeCart, clearGuestCart } from "../store/slices/cartSlice";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +21,7 @@ const LoginPage = () => {
   const location = useLocation();
 
   const { isAuthenticated } = useSelector(state => state.auth);
+  const { items: guestCartItems } = useSelector(state => state.cart);
 
   const from = location.state?.from?.pathname || "/";
 
@@ -66,7 +69,24 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+      // Login the user
       await dispatch(login(formData)).unwrap();
+
+      // After successful login, check for guest cart items
+      if (guestCartItems.length > 0) {
+        try {
+          // Merge guest cart with user cart
+          await dispatch(mergeCart()).unwrap();
+
+          // Clear guest cart after successful merge
+          dispatch(clearGuestCart());
+        } catch (mergeError) {
+          console.warn("Failed to merge guest cart:", mergeError);
+          // Continue with navigation even if cart merge fails
+        }
+      }
+
+      // Navigate to the intended page
       navigate(from, { replace: true });
     } catch (error) {
       setErrors({

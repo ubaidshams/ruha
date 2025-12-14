@@ -1,7 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
+
 const cors = require("cors");
 const helmet = require("helmet");
+const mongoSanitize = require("mongo-sanitize");
+const xss = require("xss-clean");
 
 const rateLimit = require("express-rate-limit");
 const { Readable } = require("stream");
@@ -25,6 +28,17 @@ app.use(
     credentials: true,
   })
 );
+
+// Security middleware
+app.use((req, res, next) => {
+  // Sanitize MongoDB queries
+  req.body = mongoSanitize(req.body);
+  req.query = mongoSanitize(req.query);
+  req.params = mongoSanitize(req.params);
+  next();
+});
+
+app.use(xss()); // Clean user input from XSS attacks
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -249,6 +263,8 @@ app.use("/api/products", require("./routes/products"));
 app.use("/api/cart", require("./routes/cart"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/users", require("./routes/users"));
+app.use("/api/upload", require("./routes/upload"));
+app.use("/api/admin", require("./routes/admin"));
 
 // Health check
 app.get("/health", (req, res) => {

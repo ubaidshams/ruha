@@ -4,11 +4,28 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 // Async thunks
+
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values to prevent validation errors
+      const filteredParams = Object.entries(params).reduce(
+        (acc, [key, value]) => {
+          if (
+            value !== undefined &&
+            value !== null &&
+            value !== "" &&
+            value !== "undefined"
+          ) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {}
+      );
+
+      const queryString = new URLSearchParams(filteredParams).toString();
       const response = await axios.get(`${API_URL}/products?${queryString}`);
       return response.data;
     } catch (error) {
@@ -113,6 +130,47 @@ export const deleteProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to delete product"
+      );
+    }
+  }
+);
+
+export const addReview = createAsyncThunk(
+  "products/addReview",
+  async ({ productId, rating, comment }, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await axios.post(
+        `${API_URL}/products/${productId}/reviews`,
+        { rating, comment },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to add review"
+      );
+    }
+  }
+);
+
+export const deleteReview = createAsyncThunk(
+  "products/deleteReview",
+  async ({ productId, reviewId }, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await axios.delete(
+        `${API_URL}/products/${productId}/reviews/${reviewId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete review"
       );
     }
   }
@@ -299,9 +357,53 @@ const productsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+
       // Fetch Related Products
       .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
         state.relatedProducts = action.payload.products;
+      })
+      // Add Review
+      .addCase(addReview.pending, state => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(addReview.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.product && state.product._id === action.meta.arg.productId) {
+          // Add the review to the current product
+          state.product.reviews = state.product.reviews || [];
+          state.product.reviews.push(action.payload.review);
+          // Update rating
+          state.product.rating = action.payload.rating;
+        }
+        state.message = action.payload.message;
+      })
+      .addCase(addReview.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Delete Review
+      .addCase(deleteReview.pending, state => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteReview.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.product && state.product._id === action.meta.arg.productId) {
+          // Remove the review from the current product
+          if (state.product.reviews) {
+            state.product.reviews = state.product.reviews.filter(
+              review => review._id !== action.meta.arg.reviewId
+            );
+          }
+          // Update rating
+          state.product.rating = action.payload.rating;
+        }
+        state.message = action.payload.message;
+      })
+      .addCase(deleteReview.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

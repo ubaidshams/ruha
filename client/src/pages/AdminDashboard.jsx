@@ -20,6 +20,7 @@ import {
   fetchProductStats,
   deleteProduct,
 } from "../store/slices/adminSlice";
+import SalesChart from "../components/ui/SalesChart";
 
 const AdminDashboard = () => {
   const dispatch = useDispatch();
@@ -188,6 +189,16 @@ const AdminDashboard = () => {
               Analytics
             </Link>
           </div>
+        </motion.div>
+
+        {/* Sales Analytics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-8"
+        >
+          <SalesChart timeRange="7d" />
         </motion.div>
 
         {/* Product Management */}

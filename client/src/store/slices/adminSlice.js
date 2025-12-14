@@ -93,6 +93,100 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+export const uploadImage = createAsyncThunk(
+  "admin/uploadImage",
+  async (file, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await axios.post(`${API_URL}/upload/single`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to upload image"
+      );
+    }
+  }
+);
+
+export const uploadMultipleImages = createAsyncThunk(
+  "admin/uploadMultipleImages",
+  async (files, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append("images", file);
+      });
+
+      const response = await axios.post(
+        `${API_URL}/upload/multiple`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to upload images"
+      );
+    }
+  }
+);
+
+export const deleteImage = createAsyncThunk(
+  "admin/deleteImage",
+  async (publicId, { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await axios.delete(
+        `${API_URL}/upload/image/${publicId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete image"
+      );
+    }
+  }
+);
+
+export const fetchSalesData = createAsyncThunk(
+  "admin/fetchSalesData",
+  async (timeRange = "7d", { rejectWithValue, getState }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await axios.get(
+        `${API_URL}/admin/sales?range=${timeRange}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch sales data"
+      );
+    }
+  }
+);
+
 const initialState = {
   products: [],
   stats: {
@@ -102,7 +196,9 @@ const initialState = {
     inactiveProducts: 0,
     totalStockValue: 0,
   },
+  salesData: [],
   loading: false,
+  isLoading: false,
   error: null,
   isModalOpen: false,
   editingProduct: null,
@@ -192,6 +288,20 @@ const adminSlice = createSlice({
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch Sales Data
+      .addCase(fetchSalesData.pending, state => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchSalesData.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.salesData = action.payload.data || [];
+      })
+      .addCase(fetchSalesData.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload;
       });
   },

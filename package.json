@@ -22,5 +22,8 @@
     "claymorphism"
   ],
   "author": "Ruha Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "react-helmet-async": "^2.0.5"
+  }
 }

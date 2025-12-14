@@ -12,6 +12,7 @@ import {
   Facebook,
   Youtube,
 } from "lucide-react";
+import RuhaLogo from "../ui/RuhaLogo";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -86,12 +87,13 @@ const Footer = () => {
             className="lg:col-span-1"
           >
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-bubblegum to-electric-teal rounded-kawaii flex items-center justify-center">
+              <RuhaLogo />
+              {/* <div className="w-10 h-10 bg-gradient-to-br from-bubblegum to-electric-teal rounded-kawaii flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <span className="font-heading text-2xl text-gradient bg-gradient-to-r from-bubblegum to-electric-teal bg-clip-text text-transparent">
                 Ruha
-              </span>
+              </span> */}
             </Link>
             <p className="text-white/70 mb-6 leading-relaxed">
               Your ultimate destination for kawaii products that bring joy to

@@ -179,6 +179,52 @@ export const fetchWishlist = createAsyncThunk(
   }
 );
 
+export const toggleWishlistOptimistic = createAsyncThunk(
+  "user/toggleWishlistOptimistic",
+  async (productId, { rejectWithValue, getState, dispatch }) => {
+    const state = getState();
+    const token = state.auth.token;
+    const currentWishlist = state.user.wishlist;
+
+    // Check if product is already in wishlist
+    const isInWishlist = currentWishlist.some(item => item._id === productId);
+
+    // Optimistically update UI immediately
+    if (isInWishlist) {
+      dispatch(removeFromWishlistLocally(productId));
+    } else {
+      dispatch(addToWishlistLocally(productId));
+    }
+
+    try {
+      const response = isInWishlist
+        ? await axios.delete(`${API_URL}/users/wishlist/${productId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        : await axios.post(
+            `${API_URL}/users/wishlist/${productId}`,
+            {},
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+      return response.data;
+    } catch (error) {
+      // Rollback optimistic update on failure
+      if (isInWishlist) {
+        dispatch(addToWishlistLocally(productId));
+      } else {
+        dispatch(removeFromWishlistLocally(productId));
+      }
+
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update wishlist"
+      );
+    }
+  }
+);
+
 const initialState = {
   profile: null,
   addresses: [],
@@ -412,6 +458,21 @@ const userSlice = createSlice({
         state.wishlist = action.payload.wishlist;
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
+        state.isLoadingWishlist = false;
+        state.error = action.payload;
+      })
+
+      // Toggle Wishlist Optimistic
+      .addCase(toggleWishlistOptimistic.pending, state => {
+        state.isLoadingWishlist = true;
+        state.error = null;
+      })
+      .addCase(toggleWishlistOptimistic.fulfilled, (state, action) => {
+        state.isLoadingWishlist = false;
+        state.wishlist = action.payload.wishlist;
+        state.message = action.payload.message;
+      })
+      .addCase(toggleWishlistOptimistic.rejected, (state, action) => {
         state.isLoadingWishlist = false;
         state.error = action.payload;
       });

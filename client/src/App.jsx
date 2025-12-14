@@ -9,6 +9,7 @@ import LoadingSpinner from "./components/ui/LoadingSpinner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import KawaiiCursor from "./components/ui/KawaiiCursor";
+import ScrollToTop from "./components/utils/ScrollToTop";
 
 // Lazy load pages for better performance
 const HomePage = React.lazy(() => import("./pages/HomePage"));
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-gradient-to-br from-blush via-lavender/30 to-white">
         {/* Kawaii Cursor */}
         {/* <KawaiiCursor /> */}

@@ -5,6 +5,7 @@ import { ChevronRight, Sparkles, TrendingUp, Star } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFeaturedProducts } from "../store/slices/productsSlice";
 import KawaiiModelViewer from "../components/ui/KawaiiModelViewer";
+import SEO from "../components/ui/SEO";
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -53,51 +54,16 @@ const HomePage = () => {
     },
   ];
 
-  const trendingItems = [
-    {
-      id: 1,
-      name: "Nebula Quencher Tumbler",
-      image: "/assets/products/tumbler-blue.jpg",
-      price: 1299,
-      category: "Sip",
-      rating: 4.8,
-      reviews: 234,
-      viral: true,
-    },
-    {
-      id: 2,
-      name: "Chibi Astronaut Fan",
-      image: "/assets/products/astro-fan.jpg",
-      price: 899,
-      category: "Tech",
-      rating: 4.9,
-      reviews: 156,
-      viral: true,
-    },
-    {
-      id: 3,
-      name: "Cloud Puffy Tote",
-      image: "/assets/products/puffy-bag-pink.jpg",
-      price: 1599,
-      category: "Carry",
-      rating: 4.7,
-      reviews: 89,
-      viral: true,
-    },
-    {
-      id: 4,
-      name: "Ruha Mystery Minion",
-      image: "/assets/products/mystery-box.jpg",
-      price: 499,
-      category: "Play",
-      rating: 4.6,
-      reviews: 312,
-      viral: true,
-    },
-  ];
+  const trendingItems = [];
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Welcome to Kawaii Cloud - Ruha Digital Playground"
+        description="Discover adorable kawaii-inspired products, bags, and accessories. From cute drinkware to playful tech gadgets, explore trending kawaii items in our immersive 3D shopping experience."
+        keywords="kawaii shop, cute products, kawaii bags, kawaii accessories, kawaii drinks, kawaii toys, kawaii tech, kawaii decor, online kawaii store, kawaii cloud"
+        type="website"
+      />
       {/* Hero Section with 3D Kawaii Model */}
       <section className="relative h-screen overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-cyan-100"></div>

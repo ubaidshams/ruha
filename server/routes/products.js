@@ -423,4 +423,149 @@ router.get("/admin/stats", [auth, adminAuth], async (req, res) => {
   }
 });
 
+// Add a review to a product
+router.post(
+  "/:id/reviews",
+  [
+    auth,
+    param("id").isMongoId().withMessage("Invalid product ID format"),
+    body("rating")
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be between 1 and 5"),
+    body("comment")
+      .notEmpty()
+      .withMessage("Comment is required")
+      .isLength({ max: 1000 })
+      .withMessage("Comment must be less than 1000 characters"),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      const { rating, comment } = req.body;
+      const userId = req.user.id; // From auth middleware
+
+      // Find the product
+      const product = await Product.findById(req.params.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Check if user already reviewed this product
+      const existingReview = product.reviews.find(
+        review => review.user.toString() === userId
+      );
+
+      if (existingReview) {
+        return res.status(400).json({
+          message: "You have already reviewed this product",
+        });
+      }
+
+      // Add the review
+      const newReview = {
+        user: userId,
+        rating,
+        comment,
+        createdAt: new Date(),
+        isApproved: true, // Auto-approve for now
+      };
+
+      product.reviews.push(newReview);
+
+      // Recalculate average rating
+      const totalRating = product.reviews.reduce(
+        (sum, review) => sum + review.rating,
+        0
+      );
+      product.rating.average = totalRating / product.reviews.length;
+      product.rating.count = product.reviews.length;
+
+      await product.save();
+
+      // Populate user information for the response
+      await product.populate("reviews.user", "username email");
+
+      res.status(201).json({
+        message: "Review added successfully",
+        review: newReview,
+        rating: product.rating,
+      });
+    } catch (error) {
+      console.error("Add review error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Delete a review (admin only)
+router.delete(
+  "/:id/reviews/:reviewId",
+  [
+    auth,
+    adminAuth,
+    param("id").isMongoId().withMessage("Invalid product ID format"),
+    param("reviewId").isMongoId().withMessage("Invalid review ID format"),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      // Find the product
+      const product = await Product.findById(req.params.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Find and remove the review
+      const reviewIndex = product.reviews.findIndex(
+        review => review._id.toString() === req.params.reviewId
+      );
+
+      if (reviewIndex === -1) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+
+      // Remove the review
+      product.reviews.splice(reviewIndex, 1);
+
+      // Recalculate average rating
+      if (product.reviews.length > 0) {
+        const totalRating = product.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        product.rating.average = totalRating / product.reviews.length;
+      } else {
+        product.rating.average = 0;
+      }
+      product.rating.count = product.reviews.length;
+
+      await product.save();
+
+      res.json({
+        message: "Review deleted successfully",
+        rating: product.rating,
+      });
+    } catch (error) {
+      console.error("Delete review error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 module.exports = router;

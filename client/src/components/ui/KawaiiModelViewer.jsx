@@ -20,14 +20,25 @@ const KawaiiModelViewer = ({
   onLoad,
   onError,
   fallbackImage,
+  loadOnDemand = null, // null = auto-detect mobile, true = always demand load, false = immediate load
 }) => {
   const dispatch = useDispatch();
   const { modelLoadingStates } = useSelector(state => state.ui);
 
   const [isInView, setIsInView] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isLoadRequested, setIsLoadRequested] = useState(false);
 
   const loadingState = modelLoadingStates[productId] || "loading";
+
+  // Auto-detect mobile device or use explicit loadOnDemand setting
+  const isMobile =
+    loadOnDemand !== null
+      ? loadOnDemand
+      : /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+  const shouldDemandLoad = isMobile || loadOnDemand === true;
 
   // Check if URL is for Spline
   const isSplineUrl =
@@ -59,25 +70,33 @@ const KawaiiModelViewer = ({
   };
 
   // Intersection Observer for lazy loading
-
   useEffect(() => {
-    if (!url || hasStarted) return;
+    if (!url) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasStarted) {
-          setIsInView(true);
-          setHasStarted(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
+    // For demand-loaded content, only set up intersection observer
+    if (shouldDemandLoad) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && !hasStarted) {
+            setIsInView(true);
+            setHasStarted(true);
+          }
+        },
+        { threshold: 0.1 }
+      );
 
-    const element = document.getElementById(`viewer-${productId}`);
-    if (element) observer.observe(element);
+      const element = document.getElementById(`viewer-${productId}`);
+      if (element) observer.observe(element);
 
-    return () => observer.disconnect();
-  }, [url, productId, hasStarted]);
+      return () => observer.disconnect();
+    }
+
+    // For immediate loading, just set states
+    if (!hasStarted) {
+      setIsInView(true);
+      setHasStarted(true);
+    }
+  }, [url, productId, hasStarted, shouldDemandLoad]);
 
   const handleLoad = spline => {
     if (!spline) return;
@@ -147,6 +166,28 @@ const KawaiiModelViewer = ({
     </div>
   );
 
+  const ClickToLoadOverlay = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bubblegum/10 to-lavender-mist/20 rounded-kawaii border-2 border-dashed border-bubblegum/30">
+      <div className="text-center p-6">
+        <div className="text-4xl mb-4">✨</div>
+        <div className="text-dark-slate font-medium text-lg mb-2">
+          View in 3D
+        </div>
+        <div className="text-dark-slate/70 text-sm mb-4">
+          Tap to load 3D model and save battery
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsLoadRequested(true)}
+          className="bg-bubblegum text-white px-6 py-3 rounded-kawaii font-medium shadow-kawaii-soft hover:shadow-kawaii-glow transition-all duration-300"
+        >
+          Load 3D Model
+        </motion.button>
+      </div>
+    </div>
+  );
+
   if (!url) {
     return (
       <div className={`relative ${className}`}>
@@ -182,26 +223,54 @@ const KawaiiModelViewer = ({
       {/* Error State */}
       {loadingState === "error" && <ErrorFallback />}
 
-      {/* 3D Model - Only render when in view and not error */}
-      {isInView && loadingState !== "error" && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full h-full"
-        >
-          <Spline
-            scene={getProxyUrl(url)}
+      {/* 3D Model - Only render when conditions are met */}
+      {shouldDemandLoad ? (
+        // For demand loading: show overlay until explicitly requested
+        !isLoadRequested ? (
+          <ClickToLoadOverlay />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
             className="w-full h-full"
-            onLoad={handleLoad}
-            onError={handleError}
-            style={{
-              width: "100%",
-              height: "100%",
-              borderRadius: "12px",
-            }}
-          />
-        </motion.div>
+          >
+            <Spline
+              scene={getProxyUrl(url)}
+              className="w-full h-full"
+              onLoad={handleLoad}
+              onError={handleError}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "12px",
+              }}
+            />
+          </motion.div>
+        )
+      ) : (
+        // For immediate loading: render when in view and not error
+        isInView &&
+        loadingState !== "error" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-full h-full"
+          >
+            <Spline
+              scene={getProxyUrl(url)}
+              className="w-full h-full"
+              onLoad={handleLoad}
+              onError={handleError}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "12px",
+              }}
+            />
+          </motion.div>
+        )
       )}
 
       {/* Kawaii Decoration */}
