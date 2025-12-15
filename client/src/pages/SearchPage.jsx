@@ -422,35 +422,168 @@ const SearchPage = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-12"
+                className="text-center py-16"
               >
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-xl font-semibold text-dark-slate mb-2">
-                  No results found
-                </h3>
-                <p className="text-dark-slate/70 mb-6">
-                  Try adjusting your search terms or filters
-                </p>
-                <button
-                  onClick={clearAllFilters}
-                  className="btn-outline-kawaii"
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                  className="mb-6"
                 >
-                  Clear Filters
-                </button>
+                  <div className="text-7xl mb-4">🥺</div>
+                  <h3 className="text-2xl font-semibold text-dark-slate mb-3">
+                    No kawaii treasures found
+                  </h3>
+                  <p className="text-dark-slate/70 text-lg mb-2">
+                    We couldn't find anything matching "{searchQuery}"
+                  </p>
+                  <p className="text-dark-slate/50 text-sm mb-8">
+                    But don't worry! Try different keywords or clear your
+                    filters
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                >
+                  <button
+                    onClick={clearAllFilters}
+                    className="btn-kawaii px-6 py-3"
+                  >
+                    Clear All Filters ✨
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLocalQuery("");
+                      navigate("/");
+                    }}
+                    className="btn-outline-kawaii px-6 py-3"
+                  >
+                    Browse Categories 🌸
+                  </button>
+                </motion.div>
+
+                {/* Suggestion Tags */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-8 max-w-md mx-auto"
+                >
+                  <p className="text-dark-slate/60 text-sm mb-3">
+                    Try searching for:
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {["kawaii", "cute", "bag", "stationery", "gift"].map(
+                      tag => (
+                        <button
+                          key={tag}
+                          onClick={() => handleSearch(tag)}
+                          className="px-3 py-1 text-xs rounded-full bg-bubblegum/10 text-bubblegum border border-bubblegum/20 hover:bg-bubblegum/20 transition-colors"
+                        >
+                          #{tag}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </motion.div>
               </motion.div>
             ) : (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-12"
+                className="text-center py-16"
               >
-                <div className="text-6xl mb-4">🔍✨</div>
-                <h3 className="text-xl font-semibold text-dark-slate mb-2">
-                  Start Your Search
-                </h3>
-                <p className="text-dark-slate/70">
-                  Enter a search term above to find amazing kawaii products
-                </p>
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                  className="mb-8"
+                >
+                  <div className="text-7xl mb-4">🔍✨</div>
+                  <h3 className="text-2xl font-semibold text-dark-slate mb-3">
+                    Start Your Magical Search
+                  </h3>
+                  <p className="text-dark-slate/70 text-lg mb-6">
+                    Discover amazing kawaii products with our magical search ✨
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="max-w-lg mx-auto"
+                >
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white/50 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="text-2xl mb-2">🎯</div>
+                      <div className="font-medium text-dark-slate">
+                        Smart Search
+                      </div>
+                      <div className="text-dark-slate/60 text-xs">
+                        Find exactly what you need
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="text-2xl mb-2">🏷️</div>
+                      <div className="font-medium text-dark-slate">
+                        Filter Options
+                      </div>
+                      <div className="text-dark-slate/60 text-xs">
+                        By category & price
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="text-2xl mb-2">📱</div>
+                      <div className="font-medium text-dark-slate">
+                        3D Preview
+                      </div>
+                      <div className="text-dark-slate/60 text-xs">
+                        AR support included
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="text-2xl mb-2">⚡</div>
+                      <div className="font-medium text-dark-slate">
+                        Lightning Fast
+                      </div>
+                      <div className="text-dark-slate/60 text-xs">
+                        Instant results
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Popular Categories Preview */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-12"
+                >
+                  <p className="text-dark-slate/60 text-sm mb-4">
+                    Popular categories:
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {categories?.slice(0, 5).map(category => (
+                      <button
+                        key={category?._id}
+                        onClick={() => {
+                          setLocalQuery(category?.name);
+                          handleSearch(category?.name);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm rounded-full bg-gradient-to-r from-bubblegum/10 to-electric-teal/10 border border-bubblegum/20 hover:from-bubblegum/20 hover:to-electric-teal/20 transition-all"
+                      >
+                        <span>{category?.icon}</span>
+                        <span>{category?.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
               </motion.div>
             )}
           </div>
