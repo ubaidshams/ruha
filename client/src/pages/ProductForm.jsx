@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
+
 import {
   Save,
   ArrowLeft,
@@ -13,12 +14,15 @@ import {
   Package,
   Gift,
   Image,
+  TrendingUp,
 } from "lucide-react";
+
 import {
   createProduct,
   updateProduct,
   fetchProductById,
 } from "../store/slices/productsSlice";
+import { fetchCategories } from "../store/slices/categoriesSlice";
 import {
   uploadImage,
   uploadMultipleImages,
@@ -33,12 +37,13 @@ const ProductForm = () => {
 
   const { product, loading } = useSelector(state => state.products);
   const { isLoading } = useSelector(state => state.admin);
+  const { categories } = useSelector(state => state.categories);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
-    category: "Sip",
+    category: "",
     images: [],
     specifications: {
       material: "",
@@ -49,6 +54,8 @@ const ProductForm = () => {
     stock: "",
     isBlindBox: false,
     modelUrl: "",
+    isViral: false,
+    featured: false,
   });
 
   const [newTag, setNewTag] = useState("");
@@ -59,7 +66,11 @@ const ProductForm = () => {
 
   const { isLoading: isAdminLoading } = useSelector(state => state.admin);
 
-  const categories = ["Sip", "Carry", "Play", "Tech", "Glam", "Decor"];
+  // Fetch categories on component mount
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
   const predefinedTags = [
     "kawaii",
     "cute",
@@ -88,7 +99,7 @@ const ProductForm = () => {
         name: product.name || "",
         description: product.description || "",
         price: product.price?.toString() || "",
-        category: product.category || "Sip",
+        category: product.category || "",
         images: product.images || [],
         specifications: {
           material: product.specifications?.material || "",
@@ -99,6 +110,8 @@ const ProductForm = () => {
         stock: product.stock?.toString() || "",
         isBlindBox: product.isBlindBox || false,
         modelUrl: product.modelUrl || "",
+        isViral: product.isViral || false,
+        featured: product.featured || false,
       });
     }
   }, [isEdit, product]);
@@ -342,8 +355,8 @@ const ProductForm = () => {
                   }`}
                 >
                   {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
@@ -661,6 +674,43 @@ const ProductForm = () => {
                   </span>
                   <p className="text-sm text-dark-slate/70">
                     This will be treated as a mystery item for customers
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-lg border border-white/50">
+                <input
+                  type="checkbox"
+                  checked={formData.isViral}
+                  onChange={e => handleInputChange("isViral", e.target.checked)}
+                  className="w-5 h-5 text-bubblegum focus:ring-bubblegum rounded"
+                />
+                <div>
+                  <span className="font-medium text-dark-slate flex items-center gap-2">
+                    <Star size={16} className="text-electric-teal" /> Viral Now
+                  </span>
+                  <p className="text-xs text-dark-slate/70">
+                    Appears in the homepage trending section
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-lg border border-white/50">
+                <input
+                  type="checkbox"
+                  checked={formData.featured}
+                  onChange={e =>
+                    handleInputChange("featured", e.target.checked)
+                  }
+                  className="w-5 h-5 text-bubblegum focus:ring-bubblegum rounded"
+                />
+                <div>
+                  <span className="font-medium text-dark-slate flex items-center gap-2">
+                    <Star size={16} className="text-sunshine" /> Featured
+                    Product
+                  </span>
+                  <p className="text-xs text-dark-slate/70">
+                    Highlighted in featured lists
                   </p>
                 </div>
               </label>

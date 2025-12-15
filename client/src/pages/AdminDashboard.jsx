@@ -166,13 +166,21 @@ const AdminDashboard = () => {
           <h2 className="text-xl font-semibold text-dark-slate mb-4">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               to="/admin/products/new"
               className="btn-kawaii p-4 flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Add New Product
+            </Link>
+            <Link
+              to="/admin/categories"
+              className="btn-outline-kawaii p-4 flex items-center justify-center gap-2"
+            >
+              <Package className="w-5 h-5" />
+              Manage Categories
             </Link>
             <Link
               to="/admin/orders"

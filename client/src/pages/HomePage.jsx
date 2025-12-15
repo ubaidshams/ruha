@@ -3,58 +3,49 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Sparkles, TrendingUp, Star } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchFeaturedProducts } from "../store/slices/productsSlice";
+
+import {
+  fetchFeaturedProducts,
+  fetchViralProducts,
+} from "../store/slices/productsSlice";
+import { fetchCategories } from "../store/slices/categoriesSlice";
 import KawaiiModelViewer from "../components/ui/KawaiiModelViewer";
 import SEO from "../components/ui/SEO";
 
 const HomePage = () => {
   const dispatch = useDispatch();
-  const { featuredProducts, loading } = useSelector(state => state.products);
+  const { featuredProducts, viralProducts, loading, isLoadingViral } =
+    useSelector(state => state.products);
+  const { categories } = useSelector(state => state.categories);
 
   useEffect(() => {
     dispatch(fetchFeaturedProducts());
+    dispatch(fetchViralProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
-  const categoryPills = [
-    {
-      name: "Sip",
-      path: "/products/Sip",
-      color: "from-blue-400 to-cyan-400",
-      icon: "🥤",
-    },
-    {
-      name: "Carry",
-      path: "/products/Carry",
-      color: "from-pink-400 to-rose-400",
-      icon: "👜",
-    },
-    {
-      name: "Play",
-      path: "/products/Play",
-      color: "from-purple-400 to-indigo-400",
-      icon: "🎮",
-    },
-    {
-      name: "Tech",
-      path: "/products/Tech",
-      color: "from-green-400 to-emerald-400",
-      icon: "💻",
-    },
-    {
-      name: "Glam",
-      path: "/products/Glam",
-      color: "from-yellow-400 to-orange-400",
-      icon: "💄",
-    },
-    {
-      name: "Decor",
-      path: "/products/Decor",
-      color: "from-violet-400 to-purple-400",
-      icon: "🏠",
-    },
+  // Default colors for categories if none specified
+  const defaultColors = [
+    "from-blue-400 to-cyan-400",
+    "from-pink-400 to-rose-400",
+    "from-purple-400 to-indigo-400",
+    "from-green-400 to-emerald-400",
+    "from-yellow-400 to-orange-400",
+    "from-violet-400 to-purple-400",
+    "from-red-400 to-pink-400",
+    "from-teal-400 to-cyan-400",
   ];
 
-  const trendingItems = [];
+  const defaultIcons = ["🥤", "👜", "🎮", "💻", "💄", "🏠", "🎁", "📱"];
+
+  const categoryPills = categories.map((category, index) => ({
+    name: category.name,
+    path: `/products/${category.name}`,
+    color: category.color || defaultColors[index % defaultColors.length],
+    icon: category.icon || defaultIcons[index % defaultIcons.length],
+  }));
+
+  // Remove hardcoded trending items - will be populated by viralProducts from API
 
   return (
     <div className="min-h-screen">
@@ -198,66 +189,92 @@ const HomePage = () => {
             <Sparkles className="w-8 h-8 text-electric-teal ml-3" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -10 }}
-                className="group"
-              >
-                <Link to={`/product/${item.id}`} className="block">
-                  <div className="card-kawaii overflow-hidden">
-                    <div className="relative">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-3 right-3">
-                        <span className="bg-sunshine text-dark-slate px-2 py-1 rounded-full text-xs font-bold flex items-center">
-                          <Star className="w-3 h-3 mr-1" />
-                          Viral
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-bubblegum bg-bubblegum/10 px-2 py-1 rounded-full">
-                          {item.category}
-                        </span>
-                        <div className="flex items-center text-sm text-dark-slate/70">
-                          <Star className="w-4 h-4 text-sunshine mr-1" />
-                          {item.rating}
-                          <span className="ml-1">({item.reviews})</span>
+          {isLoadingViral ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="card-kawaii animate-pulse">
+                  <div className="w-full h-48 bg-gray-200 rounded-kawaii"></div>
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : viralProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {viralProducts.map((item, index) => (
+                <motion.div
+                  key={item._id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -10 }}
+                  className="group"
+                >
+                  <Link to={`/product/${item._id}`} className="block">
+                    <div className="card-kawaii overflow-hidden">
+                      <div className="relative">
+                        <img
+                          src={item.images?.[0] || "/placeholder-product.jpg"}
+                          alt={item.name}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-3 right-3">
+                          <span className="bg-sunshine text-dark-slate px-2 py-1 rounded-full text-xs font-bold flex items-center">
+                            <Star className="w-3 h-3 mr-1" />
+                            Viral
+                          </span>
                         </div>
                       </div>
 
-                      <h3 className="font-semibold text-dark-slate mb-2 line-clamp-2">
-                        {item.name}
-                      </h3>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-bubblegum bg-bubblegum/10 px-2 py-1 rounded-full">
+                            {item.category}
+                          </span>
+                          <div className="flex items-center text-sm text-dark-slate/70">
+                            <Star className="w-4 h-4 text-sunshine mr-1" />
+                            {item.rating?.average?.toFixed(1) || "0.0"}
+                            <span className="ml-1">
+                              ({item.rating?.count || 0})
+                            </span>
+                          </div>
+                        </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl font-bold text-bubblegum">
-                          ₹{item.price.toLocaleString()}
-                        </span>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="btn-kawaii-sm"
-                        >
-                          Add to Cart
-                        </motion.button>
+                        <h3 className="font-semibold text-dark-slate mb-2 line-clamp-2">
+                          {item.name}
+                        </h3>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-xl font-bold text-bubblegum">
+                            ₹{item.price?.toLocaleString() || "0"}
+                          </span>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="btn-kawaii-sm"
+                          >
+                            Add to Cart
+                          </motion.button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔥</div>
+              <h3 className="text-xl font-heading mb-2">
+                No viral products yet!
+              </h3>
+              <p className="text-dark-slate/70">
+                Check back soon for trending items.
+              </p>
+            </div>
+          )}
 
           <motion.div
             initial={{ opacity: 0 }}

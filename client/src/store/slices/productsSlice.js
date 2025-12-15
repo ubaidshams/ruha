@@ -64,6 +64,22 @@ export const fetchFeaturedProducts = createAsyncThunk(
   }
 );
 
+export const fetchViralProducts = createAsyncThunk(
+  "products/fetchViralProducts",
+  async (limit = 8, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/products/viral?limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch viral products"
+      );
+    }
+  }
+);
+
 export const searchProducts = createAsyncThunk(
   "products/searchProducts",
   async (query, { rejectWithValue }) => {
@@ -179,6 +195,7 @@ export const deleteReview = createAsyncThunk(
 const initialState = {
   products: [],
   featuredProducts: [],
+  viralProducts: [],
   relatedProducts: [],
   product: null,
   searchResults: [],
@@ -199,6 +216,7 @@ const initialState = {
   isLoading: false,
   isLoadingProduct: false,
   isLoadingFeatured: false,
+  isLoadingViral: false,
   isLoadingSearch: false,
   error: null,
   message: null,
@@ -275,6 +293,7 @@ const productsSlice = createSlice({
         state.isLoadingProduct = false;
         state.error = action.payload;
       })
+
       // Fetch Featured Products
       .addCase(fetchFeaturedProducts.pending, state => {
         state.isLoadingFeatured = true;
@@ -286,6 +305,19 @@ const productsSlice = createSlice({
       })
       .addCase(fetchFeaturedProducts.rejected, (state, action) => {
         state.isLoadingFeatured = false;
+        state.error = action.payload;
+      })
+      // Fetch Viral Products
+      .addCase(fetchViralProducts.pending, state => {
+        state.isLoadingViral = true;
+        state.error = null;
+      })
+      .addCase(fetchViralProducts.fulfilled, (state, action) => {
+        state.isLoadingViral = false;
+        state.viralProducts = action.payload.products;
+      })
+      .addCase(fetchViralProducts.rejected, (state, action) => {
+        state.isLoadingViral = false;
         state.error = action.payload;
       })
       // Search Products

@@ -105,7 +105,7 @@ const ProductDetailPage = () => {
     );
   };
 
-  const isWishlisted = product && wishlist.includes(product._id);
+  const isWishlisted = product && wishlist?.includes(product?._id);
 
   if (loading || !product) {
     return (

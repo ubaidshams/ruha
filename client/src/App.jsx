@@ -31,6 +31,9 @@ const ModelTestPage = React.lazy(() => import("./pages/ModelTestPage"));
 const NotFoundPage = React.lazy(() => import("./pages/NotFoundPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const ProductForm = React.lazy(() => import("./pages/ProductForm"));
+const CategoryManagement = React.lazy(() =>
+  import("./pages/CategoryManagement")
+);
 
 function App() {
   const dispatch = useDispatch();
@@ -106,11 +109,20 @@ function App() {
                     </AdminRoute>
                   }
                 />
+
                 <Route
                   path="/admin/dashboard"
                   element={
                     <AdminRoute>
                       <AdminDashboard />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/categories"
+                  element={
+                    <AdminRoute>
+                      <CategoryManagement />
                     </AdminRoute>
                   }
                 />

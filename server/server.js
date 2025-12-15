@@ -22,9 +22,16 @@ const limiter = rateLimit({
 // Middleware
 app.use(helmet());
 app.use(limiter);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+      "http://localhost:4173",
+      "http://localhost:5175",
+    ],
     credentials: true,
   })
 );
@@ -260,6 +267,7 @@ function sendBufferResponse(buffer, urlObj, res) {
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/products"));
+app.use("/api/categories", require("./routes/categories"));
 app.use("/api/cart", require("./routes/cart"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/users", require("./routes/users"));

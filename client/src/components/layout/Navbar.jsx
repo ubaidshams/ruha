@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { logout } from "../../store/slices/authSlice";
+import { fetchCategories } from "../../store/slices/categoriesSlice";
 import {
   toggleFilterOpen,
   clearAllFilters,
@@ -32,7 +33,13 @@ const Navbar = () => {
   const { itemCount } = useSelector(state => state.cart);
   const { activeFiltersCount } = useSelector(state => state.filters);
   const { wishlist } = useSelector(state => state.user);
+  const { categories } = useSelector(state => state.categories);
   const isAdmin = user?.role === "admin";
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const handleSearch = e => {
     e.preventDefault();
@@ -51,14 +58,14 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Generate navigation items dynamically from categories
   const navItems = [
     { name: "Home", path: "/", icon: Sparkles },
-    { name: "Sip", path: "/products/Sip", icon: null },
-    { name: "Carry", path: "/products/Carry", icon: null },
-    { name: "Play", path: "/products/Play", icon: null },
-    { name: "Tech", path: "/products/Tech", icon: null },
-    { name: "Glam", path: "/products/Glam", icon: null },
-    { name: "Decor", path: "/products/Decor", icon: null },
+    ...categories.map(category => ({
+      name: category.name,
+      path: `/products/${category.name}`,
+      icon: null,
+    })),
   ];
 
   return (
@@ -145,9 +152,9 @@ const Navbar = () => {
                 className="relative p-2 text-dark-slate hover:text-bubblegum transition-colors"
               >
                 <Heart className="w-6 h-6" />
-                {wishlist.length > 0 && (
+                {wishlist?.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-sunshine text-dark-slate text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {wishlist.length}
+                    {wishlist?.length}
                   </span>
                 )}
               </Link>

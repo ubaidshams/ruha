@@ -18,10 +18,10 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+
     category: {
       type: String,
       required: true,
-      enum: ["Sip", "Carry", "Play", "Tech", "Glam", "Decor"],
     },
     tags: [
       {
@@ -76,7 +76,12 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
     featured: {
+      type: Boolean,
+      default: false,
+    },
+    isViral: {
       type: Boolean,
       default: false,
     },
@@ -132,6 +137,7 @@ productSchema.index({ category: 1 });
 productSchema.index({ tags: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ featured: 1 });
+productSchema.index({ isViral: 1 });
 productSchema.index({ isActive: 1 });
 productSchema.index({ name: "text", description: "text" }); // For text search
 
